@@ -1,5 +1,5 @@
 let WALLET_CONNECTED= '';
-let contractAddress = "0x4DdB87D1AfF59C3F6975a08Aa02bd7A92A6d782F";
+let contractAddress = "0x53d02b01dcB128224F51715AF4F2Cf32c262113f";
 let contractAbi = [
     {
       "inputs": [
@@ -287,25 +287,53 @@ const addVote = async () => {
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Assuming 'vote-creation-form' is the ID of your form
+  document.getElementById('vote-creation-form').addEventListener('submit', initiateVoting);
+});
 
-async function initiateVoting() {
-  // Get candidate names from the form
-  const candidateName1 = document.getElementById('candidateName1').value;
-  // Repeat for other candidate names
 
-  // Connect to the smart contract
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  const signer = provider.getSigner();
-  const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
+// Event listener for the form submission
+document.getElementById('vote-creation-form').addEventListener('submit', function(event) {
+  event.preventDefault(); // Prevent the default form submission
+  initiateVoting();
+});
 
-  // Call the smart contract function to initiate voting
-  await contractInstance.startVoting([candidateName1 /*, other candidate names */]);
-
-  // Handle contract ID recording to .env file (this might need to be done server-side)
-}
 
 document.getElementById('candidateForm').addEventListener('submit', function(event) {
   event.preventDefault(); // Prevent the default form submission
   addCandidate();
 });
+
+
+async function initiateVoting(event) {
+  event.preventDefault(); // Prevent the default form submission
+
+  const candidateNames = [];
+  for (let i = 1; i <= 5; i++) {
+      const candidateName = document.getElementById(`candidate-name-${i}`).value;
+      if (candidateName) {
+          candidateNames.push(candidateName);
+      }
+  }
+
+  const votingDurationInput = document.getElementById("voting-time");
+  const votingDuration = votingDurationInput ? parseInt(votingDurationInput.value, 10) : 0;
+
+  // Send this data to the backend server
+  fetch('http://localhost:4000/deployContract', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ candidates: candidateNames, duration: votingDuration }),
+  })
+  .then(response => response.text())
+  .then(data => {
+      document.getElementById("creation-status").innerHTML = data;
+  })
+  .catch(error => {
+      console.error('Error:', error);
+      document.getElementById("creation-status").innerHTML = "Error in contract deployment. Check console for details.";
+  });
+}
