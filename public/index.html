@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="css/styles.css">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decentralized Voting Application</title>
+    <style>
+        /* Importing Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        
+        /* Resetting default browser styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Setting background and font styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #dae1e7; /* Adjusted to match the image */
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Styling the navigation bar */
+        .navbar {
+            background-color: #2a2f33; /* Dark shade */
+            color: white;
+            padding: 10px 20px;
+            text-align: right;
+        }
+
+        /* Styling links */
+        .navbar a {
+            color: #8bc34a; /* Green shade for links */
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+
+        .navbar a:hover {
+            color: #7cb342; /* Darker green for hover state */
+        }
+
+        /* Main content area */
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff; /* White background for the container */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Welcome banner */
+        .welcome-banner {
+            background-color: #4caf50; /* Green background for the header */
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Buttons and inputs */
+        .button, input[type=number] {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* Button specific styles */
+        .button {
+            background-color: #8bc34a; /* Green background for buttons */
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #7cb342; /* Darker green on hover */
+        }
+
+        /* Input field specific styles */
+        input[type=number] {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <!-- Navigation Links -->
+        <a href="index.html">Vote</a>
+        <a href="listVoters.html">List Voters</a>
+    </div>
+
+    <div class="container">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            Welcome to the Decentralized Voting Application
+        </div>
+
+        <!-- Metamask Connection -->
+        <div class="metamask-connect">
+            <button class="button" onclick="connectMetamask()">Connect Metamask</button>
+            <p id="metamasknotification"></p>
+        </div>
+
+        <!-- Voting Section -->
+        <div class="vote-section">
+            <input type="number" id="vote" placeholder="Enter the index of the candidate...">
+            <button class="button" onclick="addVote()">Submit Vote</button>
+            <p id="cand"></p>
+        </div>
+
+        <!-- Voting Status -->
+        <div class="status-section">
+            <button class="button" onclick="voteStatus()">Check Voting Status</button>
+            <p id="status"></p>
+            <p id="time"></p>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.1.umd.min.js" type="application/javascript"></script>
+</body>
+</html>
