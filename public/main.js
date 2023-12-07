@@ -1,5 +1,6 @@
-let WALLET_CONNECTED= '';
-let contractAddress = "0x53d02b01dcB128224F51715AF4F2Cf32c262113f";
+let WALLET_CONNECTED = '';
+let contractAddress;
+
 let contractAbi = [
     {
       "inputs": [
@@ -178,137 +179,132 @@ let contractAbi = [
     }
   ];
 
-const connectMetamask = async() => {
+document.addEventListener('DOMContentLoaded', () => {
+  fetchContractAddress();
+
+  const voteCreationForm = document.getElementById('vote-creation-form');
+  if (voteCreationForm) {
+    voteCreationForm.addEventListener('submit', initiateVoting);
+    } 
+    else {
+      console.error('Vote creation form not found');
+  }
+});
+
+const fetchContractAddress = async () => {
+  try {
+      const response = await fetch('http://localhost:4000/contract-address');
+      const data = await response.json();
+      contractAddress = data.address;
+      initializeContract();
+      console.log("Fetched contract address:", contractAddress); // Log the fetched address
+  } catch (error) {
+      console.error("Could not fetch contract address:", error);
+    }
+};
+
+const initializeContract = () => {
+    if (!contractAddress) {
+        console.error("Contract address is not available.");
+        return;
+    }
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
+    // Additional initialization code...
+};
+
+const connectMetamask = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     const signer = provider.getSigner();
     WALLET_CONNECTED = await signer.getAddress();
-    var element = document.getElementById("wallet");
-    var element = document.getElementById("metamasknotification");
-    element.innerHTML = "Wallet Connected" + WALLET_CONNECTED;
-}
+    document.getElementById("metamasknotification").innerHTML = "Wallet Connected: " + WALLET_CONNECTED;
+};
 
-const getAllCandidates = async() => {
-    var p3 = document.getElementById("p3");
+const getAllCandidates = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     const signer = provider.getSigner();
     const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
-    p3.innerHTML = "Getting all candidates";
     const candidates = await contractInstance.getAllVotes();
-    console.log(candidates);
-    var table = document.getElementById("myTable");
-
-    for (var i = 0; i < candidates.length; i++) {
-        var row = table.insertRow(i+1);
-        var idCell = row.insertCell();
-        var nameCell = row.insertCell();
-        var vc = row.insertCell();
-
-        idCell.innerHTML = i;
-        nameCell.innerHTML = candidates[i].name;
-        vc.innerHTML = candidates[i].voteCount;
-    }
-
-    p3.innerHTML = "Candidates added";
-}
+    let table = document.getElementById("myTable");
+    candidates.forEach((candidate, index) => {
+      let row = table.insertRow(index + 1);
+      let idCell = row.insertCell(0);
+      let nameCell = row.insertCell(1);
+      let voteCountCell = row.insertCell(2);
+      idCell.innerHTML = index;
+      nameCell.innerHTML = candidate.name;
+      voteCountCell.innerHTML = candidate.voteCount;
+    });
+};
 
 const addCandidate = async () => {
-  if (WALLET_CONNECTED !== '') {
-      var candidateNameInput = document.getElementById("candidateNameInput");
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = provider.getSigner();
-      const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
-
-      try {
-          const tx = await contractInstance.addCandidate(candidateNameInput.value);
-          await tx.wait();
-          console.log("Candidate added:", candidateNameInput.value);
-          candidateNameInput.value = '';
-          await getAllCandidates();
-      } catch (error) {
-          console.error("Error adding candidate:", error);
-      }
-  } else {
-      console.log("Please connect your wallet");
-  }
-}
+    if (WALLET_CONNECTED) {
+        const candidateNameInput = document.getElementById("candidateNameInput");
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
+        try {
+            const tx = await contractInstance.addCandidate(candidateNameInput.value);
+            await tx.wait();
+            candidateNameInput.value = '';
+            getAllCandidates();
+        } catch (error) {
+            console.error("Error adding candidate:", error);
+        }
+    } else {
+        console.log("Please connect your wallet");
+    }
+};
 
 const voteStatus = async () => {
-  if (WALLET_CONNECTED !== '') { // It's better to check for an empty string rather than 0 for WALLET_CONNECTED
-    var status = document.getElementById("status");
-    var remainingTime = document.getElementById("time");
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-    const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
-    
-    // The variable was declared as 'status' but was used as 'currentStatus'
-    const currentStatus = await contractInstance.getVotingStatus();
-    const time = await contractInstance.getRemainingTime();
-    
-    status.innerHTML = currentStatus ==1  ? "Voting is open" : "Voting is closed"; // Fixed the variable name here
-    remainingTime.innerHTML = "Remaining time: " + time; // Make sure this element ID exists in your HTML
-  } 
-  else {
-    var status = document.getElementById("status");
-    status.innerHTML = "Please connect your wallet";
-  }
-}
+    if (WALLET_CONNECTED) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
+        try {
+            const status = await contractInstance.getVotingStatus();
+            const remainingTime = await contractInstance.getRemainingTime();
+            document.getElementById("status").innerHTML = status ? "Voting is open" : "Voting is closed";
+            document.getElementById("time").innerHTML = "Remaining time: " + remainingTime;
+        } catch (error) {
+            console.error("Error getting voting status:", error);
+        }
+    } else {
+        console.log("Please connect your wallet");
+    }
+};
 
 const addVote = async () => {
-  if (WALLET_CONNECTED !== '') {
-    var voteIndexInput = document.getElementById("vote"); // Corrected to "vote"
-    if (!voteIndexInput) {
-      console.error("Vote input element not found");
-      return;
+    if (WALLET_CONNECTED) {
+        const voteIndexInput = document.getElementById("vote");
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
+        try {
+            const voteIndex = parseInt(voteIndexInput.value, 10);
+            const tx = await contractInstance.vote(voteIndex);
+            await tx.wait();
+            document.getElementById("cand").innerHTML = "Vote added";
+        } catch (error) {
+            console.error("Error submitting vote:", error);
+            document.getElementById("cand").innerHTML = "Error submitting vote. See console for details.";
+        }
+    } else {
+        console.log("Please connect your wallet");
     }
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-    const contractInstance = new ethers.Contract(contractAddress, contractAbi, signer);
-    
-    var cand = document.getElementById("cand");
-    cand.innerHTML = "Please wait, adding a vote to the contract";
-    try {
-      // Assuming that the smart contract expects a number for the vote
-      const voteIndex = parseInt(voteIndexInput.value, 10);
-      const tx = await contractInstance.vote(voteIndex);
-      await tx.wait();
-      cand.innerHTML = "Vote added";
-    } catch (error) {
-      console.error("Error submitting vote:", error);
-      cand.innerHTML = "Error submitting vote. See console for details.";
-    }
-  } else {
-    var cand = document.getElementById("cand");
-    cand.innerHTML = "Please connect your wallet";
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Assuming 'vote-creation-form' is the ID of your form
-  document.getElementById('vote-creation-form').addEventListener('submit', initiateVoting);
-});
-
-
-// Event listener for the form submission
-document.getElementById('vote-creation-form').addEventListener('submit', function(event) {
-  event.preventDefault(); // Prevent the default form submission
-  initiateVoting();
-});
-
-
-document.getElementById('candidateForm').addEventListener('submit', function(event) {
-  event.preventDefault(); // Prevent the default form submission
-  addCandidate();
-});
-
+};
 
 async function initiateVoting(event) {
-  event.preventDefault(); // Prevent the default form submission
+  console.log(0)
 
+  event.preventDefault(); // Prevent the default form submission
+  console.log(1)
   const candidateNames = [];
   for (let i = 1; i <= 5; i++) {
       const candidateName = document.getElementById(`candidate-name-${i}`).value;
@@ -316,7 +312,7 @@ async function initiateVoting(event) {
           candidateNames.push(candidateName);
       }
   }
-
+  console.log(2)
   const votingDurationInput = document.getElementById("voting-time");
   const votingDuration = votingDurationInput ? parseInt(votingDurationInput.value, 10) : 0;
 
@@ -336,4 +332,18 @@ async function initiateVoting(event) {
       console.error('Error:', error);
       document.getElementById("creation-status").innerHTML = "Error in contract deployment. Check console for details.";
   });
+  console.log(3)
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Get the form element
+  const form = document.getElementById('vote-creation-form');
+
+  // Check if the form exists
+  if (form) {
+      form.addEventListener('submit', initiateVoting);
+  } else {
+      console.error('Vote creation form not found');
+  }
+});
+
