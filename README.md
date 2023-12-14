@@ -12,7 +12,7 @@ Create a .env file in your project root directory and specify the following conf
 GOERLI_API_URL: Your Goerli testnet API URL.
 PRIVATE_KEY: Your Ethereum wallet private key.
 CONTRACT_ADDRESS: "0x53d02b01dcB128224F51715AF4F2Cf32c262113f" 
-# Note：Just leave this exact contract address here, I can't remove the contract address otherwise the code won't properly run. 
+Note：Just leave this exact contract address here, I can't remove the contract address otherwise the code won't properly run. 
 
 c. Running the Application
 1. Start the Frontend:
