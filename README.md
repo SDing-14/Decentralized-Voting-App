@@ -1,7 +1,7 @@
 a. Prerequisites：
 Ensure that your environment meets all the necessary requirements:
 
-npx hardhat
+npm hardhat
 
 
 b. Configuration：
